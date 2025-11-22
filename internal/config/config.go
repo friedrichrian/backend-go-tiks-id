@@ -8,6 +8,11 @@ import (
 
 type Config struct {
 	AppPort string
+	DBUser  string
+	DBPass  string
+	DBHost  string
+	DBPort  string
+	DBName  string
 }
 
 func Load() *Config {
@@ -15,6 +20,11 @@ func Load() *Config {
 
 	return &Config{
 		AppPort: getEnv("APP_PORT", "8080"),
+		DBUser:  getEnv("DB_USER", "root"),
+		DBPass:  getEnv("DB_PASS", "rian"),
+		DBHost:  getEnv("DB_HOST", "127.0.0.1"),
+		DBPort:  getEnv("DB_PORT", "3306"),
+		DBName:  getEnv("DB_NAME", "tiks-id"),
 	}
 }
 
