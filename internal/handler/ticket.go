@@ -117,7 +117,7 @@ func BookTicket(c *gin.Context) {
 		total += schedule.Price
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"success": true, "message": "Tiket berhasil dipesan", "data": gin.H{"transaction_id": tx.ID, "total_amount": total, "seats": req.Seats, "schedule_id": req.ScheduleID}})
+	c.JSON(http.StatusCreated, gin.H{"message": "Tiket berhasil dipesan", "data": gin.H{"transaction_id": tx.ID, "total_amount": total, "seats": req.Seats, "schedule_id": req.ScheduleID}})
 }
 
 func GetMyBookings(c *gin.Context) {
@@ -125,5 +125,109 @@ func GetMyBookings(c *gin.Context) {
 	userID := uidVal.(uint)
 	var bookings []model.Transaction
 	db.DB.Preload("Details").Where("user_id = ?", userID).Find(&bookings)
-	c.JSON(http.StatusOK, gin.H{"success": true, "data": bookings})
+	out := make([]gin.H, 0, len(bookings))
+	for _, b := range bookings {
+		var schedule model.Schedule
+		if err := db.DB.Preload("Movie.Genres").Preload("Theater").First(&schedule, b.ScheduleID).Error; err != nil {
+			// skip if schedule not found
+			continue
+		}
+
+		seats := make([]string, 0, len(b.Details))
+		total := 0
+		for _, d := range b.Details {
+			seats = append(seats, d.Seat)
+			total += d.Price
+		}
+
+		genres := make([]string, 0)
+		if schedule.Movie != nil {
+			for _, g := range schedule.Movie.Genres {
+				genres = append(genres, g.Name)
+			}
+		}
+
+		movieTitle := ""
+		movieDuration := 0
+		moviePoster := ""
+		if schedule.Movie != nil {
+			movieTitle = schedule.Movie.Title
+			movieDuration = schedule.Movie.Duration
+			moviePoster = schedule.Movie.Poster
+		}
+
+		theaterName := ""
+		if schedule.Theater != nil {
+			theaterName = schedule.Theater.Name
+		}
+
+		out = append(out, gin.H{
+			"id":             b.ID,
+			"movie_title":    movieTitle,
+			"movie_duration": movieDuration,
+			"movie_poster":   moviePoster,
+			"movie_genre":    genres,
+			"schedule_date":  schedule.StartTime,
+			"theater_name":   theaterName,
+			"seats":          seats,
+			"total_price":    total,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Bookings retrieved", "data": out})
+}
+
+func GetBookingByID(c *gin.Context) {
+	bookingID := c.Param("id")
+
+	var booking model.Transaction
+	if err := db.DB.Preload("Details").First(&booking, bookingID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Booking not found"})
+		return
+	}
+
+	var schedule model.Schedule
+	if err := db.DB.Preload("Movie.Genres").Preload("Theater").First(&schedule, booking.ScheduleID).Error; err != nil {
+		// skip if schedule not found
+	}
+
+	seats := make([]string, 0, len(booking.Details))
+	total := 0
+	for _, d := range booking.Details {
+		seats = append(seats, d.Seat)
+		total += d.Price
+	}
+
+	genres := make([]string, 0)
+	if schedule.Movie != nil {
+		for _, g := range schedule.Movie.Genres {
+			genres = append(genres, g.Name)
+		}
+	}
+
+	movieTitle := ""
+	movieDuration := 0
+	moviePoster := ""
+	if schedule.Movie != nil {
+		movieTitle = schedule.Movie.Title
+		movieDuration = schedule.Movie.Duration
+		moviePoster = schedule.Movie.Poster
+	}
+
+	theaterName := ""
+	if schedule.Theater != nil {
+		theaterName = schedule.Theater.Name
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":             booking.ID,
+		"movie_title":    movieTitle,
+		"movie_duration": movieDuration,
+		"movie_poster":   moviePoster,
+		"movie_genre":    genres,
+		"schedule_date":  schedule.StartTime,
+		"theater_name":   theaterName,
+		"seats":          seats,
+		"total_price":    total,
+	})
 }

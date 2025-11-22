@@ -49,6 +49,7 @@ func main() {
 
 		auth.POST("/tickets/book", handler.BookTicket)
 		auth.GET("/tickets/my-bookings", handler.GetMyBookings)
+		auth.GET("/tickets/my-bookings/:id", handler.GetBookingByID)
 
 		auth.GET("/movie", handler.MovieIndex)
 		auth.GET("/theater", handler.TheaterIndex)
