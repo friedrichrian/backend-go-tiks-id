@@ -56,25 +56,24 @@ func main() {
 		auth.GET("/genre", handler.GenreIndex)
 		auth.GET("/movie/:id", handler.MovieShow)
 
-		auth.POST("/genre", handler.GenreCreate)
-		auth.PATCH("/genre/:id", handler.GenreEdit)
-		auth.DELETE("/genre/:id", handler.GenreDelete)
-
-		auth.POST("/schedule", handler.ScheduleCreate)
-		auth.PATCH("/schedule/:id", handler.ScheduleEdit)
-		auth.DELETE("/schedule/:id", handler.ScheduleDelete)
-
-		auth.POST("/movie", handler.MovieCreate)
-		auth.PATCH("/movie/:id", handler.MovieEdit)
-		auth.DELETE("/movie/:id", handler.MovieDelete)
-
-		auth.POST("/theater", handler.TheaterCreate)
-		auth.PATCH("/theater/:id", handler.TheaterEdit)
-		auth.DELETE("/theater/:id", handler.TheaterDelete)
-
 		admin := auth.Group("")
 		admin.Use(middleware.AdminRequired())
 		{
+			admin.POST("/genre", handler.GenreCreate)
+			admin.PATCH("/genre/:id", handler.GenreEdit)
+			admin.DELETE("/genre/:id", handler.GenreDelete)
+
+			admin.POST("/schedule", handler.ScheduleCreate)
+			admin.PATCH("/schedule/:id", handler.ScheduleEdit)
+			admin.DELETE("/schedule/:id", handler.ScheduleDelete)
+
+			admin.POST("/movie", handler.MovieCreate)
+			admin.PATCH("/movie/:id", handler.MovieEdit)
+			admin.DELETE("/movie/:id", handler.MovieDelete)
+
+			admin.POST("/theater", handler.TheaterCreate)
+			admin.PATCH("/theater/:id", handler.TheaterEdit)
+			admin.DELETE("/theater/:id", handler.TheaterDelete)
 		}
 	}
 
