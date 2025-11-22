@@ -284,20 +284,20 @@ func MovieShow(c *gin.Context) {
 
 		// collect filled seats for this schedule
 		var transactions []model.Transaction
-		if err := db.DB.Preload("Details").Where("schedule_id = ?", s.ID).Find(&transactions).Error; err != nil {
-			transactions = nil
-		}
-		filledSet := map[string]struct{}{}
-		for _, tr := range transactions {
-			for _, d := range tr.Details {
-				if d.Seat != "" {
-					filledSet[d.Seat] = struct{}{}
+		filledSeats := []string{} // Initialize as empty slice instead of nil
+		if err := db.DB.Preload("Details").Where("schedule_id = ?", s.ID).Find(&transactions).Error; err == nil {
+			filledSet := map[string]struct{}{}
+			for _, tr := range transactions {
+				for _, d := range tr.Details {
+					if d.Seat != "" {
+						filledSet[d.Seat] = struct{}{}
+					}
 				}
 			}
-		}
-		var filledSeats []string
-		for seat := range filledSet {
-			filledSeats = append(filledSeats, seat)
+			// Convert set to slice
+			for seat := range filledSet {
+				filledSeats = append(filledSeats, seat)
+			}
 		}
 
 		// ensure theater entry exists
