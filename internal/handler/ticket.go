@@ -153,7 +153,7 @@ func GetMyBookings(c *gin.Context) {
 		if schedule.Movie != nil {
 			movieTitle = schedule.Movie.Title
 			movieDuration = schedule.Movie.Duration
-			moviePoster = schedule.Movie.Poster
+			moviePoster = formatPosterURL(c, schedule.Movie.Poster)
 		}
 
 		theaterName := ""
@@ -211,7 +211,7 @@ func GetBookingByID(c *gin.Context) {
 	if schedule.Movie != nil {
 		movieTitle = schedule.Movie.Title
 		movieDuration = schedule.Movie.Duration
-		moviePoster = schedule.Movie.Poster
+		moviePoster = formatPosterURL(c, schedule.Movie.Poster)
 	}
 
 	theaterName := ""

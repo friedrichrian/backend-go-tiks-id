@@ -25,7 +25,7 @@ func ScheduleIndex(c *gin.Context) {
 		data = append(data, gin.H{
 			"id":                  s.ID,
 			"movie_name":          s.Movie.Title,
-			"movie_poster":        s.Movie.Poster,
+			"movie_poster":        formatPosterURL(c, s.Movie.Poster),
 			"theater_name":        s.Theater.Name,
 			"movie_duration":      s.Movie.Duration,
 			"schedule_price":      s.Price,

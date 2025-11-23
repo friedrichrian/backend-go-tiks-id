@@ -73,15 +73,8 @@ func MovieIndex(c *gin.Context) {
 			genreNames = append(genreNames, g.Name)
 		}
 
-		// build poster URL
-		posterURL := ""
-		if m.Poster != "" {
-			scheme := "http"
-			if c.Request.TLS != nil {
-				scheme = "https"
-			}
-			posterURL = fmt.Sprintf("%s://%s/posters/%s", scheme, c.Request.Host, filepath.Base(m.Poster))
-		}
+		// Format poster URL using helper function
+		posterURL := formatPosterURL(c, m.Poster)
 
 		res := dto.MovieResponse{
 			ID:          m.ID,
@@ -358,15 +351,8 @@ func MovieShow(c *gin.Context) {
 		availableTheaters = append(availableTheaters, *te)
 	}
 
-	// build poster url
-	posterURL := ""
-	if m.Poster != "" {
-		scheme := "http"
-		if c.Request.TLS != nil {
-			scheme = "https"
-		}
-		posterURL = fmt.Sprintf("%s://%s/posters/%s", scheme, c.Request.Host, filepath.Base(m.Poster))
-	}
+	// Format poster URL using helper function
+	posterURL := formatPosterURL(c, m.Poster)
 	// genres as array of names
 	var genreNames []string
 	for _, g := range m.Genres {
