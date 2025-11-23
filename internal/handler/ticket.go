@@ -219,7 +219,7 @@ func GetBookingByID(c *gin.Context) {
 		theaterName = schedule.Theater.Name
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	response := gin.H{
 		"id":             booking.ID,
 		"movie_title":    movieTitle,
 		"movie_duration": movieDuration,
@@ -229,5 +229,10 @@ func GetBookingByID(c *gin.Context) {
 		"theater_name":   theaterName,
 		"seats":          seats,
 		"total_price":    total,
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Booking retrieved",
+		"data":    response,
 	})
 }
