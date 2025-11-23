@@ -255,6 +255,7 @@ func MovieShow(c *gin.Context) {
 		ScheduleID  uint     `json:"schedule_id"`
 		Time        string   `json:"time"`
 		FilledSeats []string `json:"filled_seats"`
+		Price       int      `json:"price"`
 	}
 	type dateEntry struct {
 		Date           string      `json:"date"`
@@ -336,6 +337,7 @@ func MovieShow(c *gin.Context) {
 			ScheduleID:  s.ID,
 			Time:        timeStr,
 			FilledSeats: filledSeats,
+			Price:       s.Price,
 		})
 	}
 
