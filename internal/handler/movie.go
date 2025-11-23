@@ -60,7 +60,7 @@ func MovieIndex(c *gin.Context) {
 		perPage = 100
 	}
 
-	result := db.DB.Preload("Genres").Limit(perPage).Offset(offset).Find(&movies)
+	result := db.DB.Preload("Genres").Limit(perPage).Offset(offset).Order("release_date DESC").Find(&movies)
 	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return

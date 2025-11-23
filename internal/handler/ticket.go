@@ -124,7 +124,7 @@ func GetMyBookings(c *gin.Context) {
 	uidVal, _ := c.Get("user_id")
 	userID := uidVal.(uint)
 	var bookings []model.Transaction
-	db.DB.Preload("Details").Where("user_id = ?", userID).Find(&bookings)
+	db.DB.Preload("Details").Where("user_id = ?", userID).Order("transaction_time DESC").Find(&bookings)
 	out := make([]gin.H, 0, len(bookings))
 	for _, b := range bookings {
 		var schedule model.Schedule
