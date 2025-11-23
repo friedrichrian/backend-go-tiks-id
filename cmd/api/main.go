@@ -10,9 +10,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/cors"
-
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -32,7 +31,7 @@ func main() {
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173", "http://example.com"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowMethods:     []string{"GET", "POST", "PATCH", "DELETE"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 	}))
@@ -69,6 +68,8 @@ func main() {
 		admin := auth.Group("")
 		admin.Use(middleware.AdminRequired())
 		{
+			admin.GET("/transaction", handler.GetTransactionIndex)
+			admin.GET("/users", handler.UserIndex)
 			admin.POST("/genre", handler.GenreCreate)
 			admin.PATCH("/genre/:id", handler.GenreEdit)
 			admin.DELETE("/genre/:id", handler.GenreDelete)
