@@ -14,25 +14,69 @@ import (
 )
 
 func ScheduleIndex(c *gin.Context) {
-	var schedules []model.Schedule
-	db.DB.Preload("Movie").Preload("Theater").Find(&schedules)
-	if len(schedules) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"message": "Schedule not found"})
-		return
-	}
-	data := []gin.H{}
-	for _, s := range schedules {
-		data = append(data, gin.H{
-			"id":                  s.ID,
-			"movie_name":          s.Movie.Title,
-			"movie_poster":        formatPosterURL(c, s.Movie.Poster),
-			"theater_name":        s.Theater.Name,
-			"movie_duration":      s.Movie.Duration,
-			"schedule_price":      s.Price,
-			"schedule_start_time": s.StartTime,
-		})
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "Schedule found", "data": data})
+    var schedules []model.Schedule
+    if err := db.DB.Preload("Movie").Preload("Theater").Find(&schedules).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch schedules"})
+        return
+    }
+
+    if len(schedules) == 0 {
+        c.JSON(http.StatusOK, gin.H{"message": "No schedules found", "data": []interface{}{}})
+        return
+    }
+
+    // Preload all transactions for all schedules in one query
+    var scheduleIDs []uint
+    for _, s := range schedules {
+        scheduleIDs = append(scheduleIDs, s.ID)
+    }
+
+    var transactions []model.Transaction
+    if err := db.DB.Preload("Details").Where("schedule_id IN ?", scheduleIDs).Find(&transactions).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch transaction data"})
+        return
+    }
+
+    // Create a map of schedule ID to filled seats
+    scheduleFilledSeats := make(map[uint][]string)
+    for _, t := range transactions {
+        for _, d := range t.Details {
+            if d.Seat != "" {
+                if _, exists := scheduleFilledSeats[t.ScheduleID]; !exists {
+                    scheduleFilledSeats[t.ScheduleID] = []string{}
+                }
+                scheduleFilledSeats[t.ScheduleID] = append(scheduleFilledSeats[t.ScheduleID], d.Seat)
+            }
+        }
+    }
+
+    // Build response
+    response := make([]map[string]interface{}, 0, len(schedules))
+    for _, s := range schedules {
+        filledSeats := scheduleFilledSeats[s.ID]
+        if filledSeats == nil {
+            filledSeats = []string{} // Ensure empty array instead of nil
+        }
+        
+        scheduleData := map[string]interface{}{
+            "id":                  s.ID,
+            "movie_id":            s.MovieID,
+            "theater_id":          s.TheaterID,
+            "movie_name":          s.Movie.Title,
+            "movie_poster":        formatPosterURL(c, s.Movie.Poster),
+            "theater_name":        s.Theater.Name,
+            "movie_duration":      s.Movie.Duration,
+            "schedule_price":      s.Price,
+            "schedule_start_time": s.StartTime,
+            "filled_seats":        filledSeats,
+        }
+        response = append(response, scheduleData)
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Schedules retrieved successfully",
+        "data":    response,
+    })
 }
 
 // ScheduleCreate validates input and ensures a theater is not already booked
@@ -100,6 +144,37 @@ func ScheduleCreate(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"message": "Schedule created successfully", "data": s})
+}
+
+func ShowSchedule(c *gin.Context) {
+    id := c.Param("id")
+    if id == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Schedule ID is required"})
+        return
+    }
+
+    var s model.Schedule
+    // Preload related data
+    if err := db.DB.Preload("Movie").Preload("Theater").First(&s, id).Error; err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            c.JSON(http.StatusNotFound, gin.H{
+                "message": "Schedule not found",
+                "details": err.Error(),
+                "id_used": id,
+            })
+        } else {
+            c.JSON(http.StatusInternalServerError, gin.H{
+                "message": "Error retrieving schedule",
+                "error":   err.Error(),
+            })
+        }
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Schedule found",
+        "data":    s,
+    })
 }
 
 func ScheduleEdit(c *gin.Context) {

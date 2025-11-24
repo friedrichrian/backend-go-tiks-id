@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -31,12 +32,15 @@ type TransactionData struct {
 }
 
 type TransactionItem struct {
+	ID      uint   `json:"id"`
 	User    string `json:"user"`
 	Movie   string `json:"movie"`
 	Theater string `json:"theater"`
 	Ticket  string `json:"ticket"`
 	Tanggal string `json:"tanggal"`
 	Total   int    `json:"total"`
+	ScheduleID uint `json:"schedule_id"`
+	MovieID uint `json:"movie_id"`
 }
 
 func (Transaction) TableName() string {
@@ -47,7 +51,7 @@ func GetTransactionIndex(db *gorm.DB) (TransactionResponse, error) {
 	var transactions []Transaction
 	var response TransactionResponse
 
-	// Preload all necessary relationships
+	// Preload semua relasi yang dibutuhkan
 	err := db.Model(&Transaction{}).
 		Preload("User").
 		Preload("Schedule").
@@ -55,7 +59,6 @@ func GetTransactionIndex(db *gorm.DB) (TransactionResponse, error) {
 		Preload("Schedule.Theater").
 		Preload("Details").
 		Find(&transactions).Error
-
 	if err != nil {
 		return response, err
 	}
@@ -63,17 +66,20 @@ func GetTransactionIndex(db *gorm.DB) (TransactionResponse, error) {
 	// Initialize response
 	response.Message = "success"
 	response.Data.TotalTransactions = len(transactions)
+	response.Data.TicketsSold = 0
+	response.Data.TotalRevenue = 0
+	response.Data.Transactions = []TransactionItem{}
 
-	// Process each transaction
+	// Proses tiap transaksi
 	for _, t := range transactions {
-		// Calculate tickets and total for this transaction
-		tickets := len(t.Details)
+		// Hitung jumlah tiket dan total harga
+		ticketCount := len(t.Details)
 		total := 0
 		for _, d := range t.Details {
 			total += d.Price
 		}
 
-		// Get movie and theater names
+		// Ambil nama movie dan theater
 		movieName := ""
 		theaterName := ""
 		if t.Schedule.Movie != nil {
@@ -83,32 +89,33 @@ func GetTransactionIndex(db *gorm.DB) (TransactionResponse, error) {
 			theaterName = t.Schedule.Theater.Name
 		}
 
-		// Format date
+		// Format tanggal
 		date := t.CreatedAt.Format("2006-01-02")
 
-		// Add to transactions list
+		// Format string tiket
+		ticketText := fmt.Sprintf("%d Ticket", ticketCount)
+		if ticketCount > 1 {
+			ticketText = fmt.Sprintf("%d Tickets", ticketCount)
+		}
+
+		// Tambahkan ke list transaksi
 		response.Data.Transactions = append(response.Data.Transactions, TransactionItem{
-			User:    t.User.Fullname,
-			Movie:   movieName,
-			Theater: theaterName,
-			Ticket:  "1 Ticket", // Default, will be updated in next step
-			Tanggal: date,
-			Total:   total,
+			ID:        t.ID,
+			ScheduleID: t.ScheduleID,
+			User:      t.User.Fullname,
+			MovieID:   t.Schedule.MovieID,
+			Movie:     movieName,
+			Theater:   theaterName,
+			Ticket:    ticketText,
+			Tanggal:   date,
+			Total:     total,
 		})
 
-		// Update totals
-		response.Data.TicketsSold += tickets
+		// Update total
+		response.Data.TicketsSold += ticketCount
 		response.Data.TotalRevenue += total
-	}
-
-	// Update ticket counts in the response
-	for i, t := range transactions {
-		tickets := len(t.Details)
-		response.Data.Transactions[i].Ticket = "1 Ticket"
-		if tickets > 1 {
-			response.Data.Transactions[i].Ticket = "2 Tickets"
-		}
 	}
 
 	return response, nil
 }
+

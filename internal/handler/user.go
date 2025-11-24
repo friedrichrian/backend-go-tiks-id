@@ -22,3 +22,15 @@ func UserIndex(c *gin.Context) {
 
 	c.JSON(http.StatusOK, users)
 }
+
+func UserDelete(c *gin.Context){
+	id := c.Param("id")
+	var u model.User
+	if err := db.DB.First(&u, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "User not found"})
+		return
+	}
+
+	db.DB.Delete(&u)
+	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+}

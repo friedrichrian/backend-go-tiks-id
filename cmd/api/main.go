@@ -70,10 +70,13 @@ func main() {
 		{
 			admin.GET("/transaction", handler.GetTransactionIndex)
 			admin.GET("/users", handler.UserIndex)
+			admin.DELETE("/users/:id", handler.UserDelete)
+
 			admin.POST("/genre", handler.GenreCreate)
 			admin.PATCH("/genre/:id", handler.GenreEdit)
 			admin.DELETE("/genre/:id", handler.GenreDelete)
 
+			admin.GET("/schedule/:id", handler.ShowSchedule)
 			admin.POST("/schedule", handler.ScheduleCreate)
 			admin.PATCH("/schedule/:id", handler.ScheduleEdit)
 			admin.DELETE("/schedule/:id", handler.ScheduleDelete)
@@ -82,6 +85,7 @@ func main() {
 			admin.PATCH("/movie/:id", handler.MovieEdit)
 			admin.DELETE("/movie/:id", handler.MovieDelete)
 
+			admin.GET("/theater/:id", handler.ShowTheater)
 			admin.POST("/theater", handler.TheaterCreate)
 			admin.PATCH("/theater/:id", handler.TheaterEdit)
 			admin.DELETE("/theater/:id", handler.TheaterDelete)

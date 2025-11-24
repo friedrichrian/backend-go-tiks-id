@@ -24,6 +24,16 @@ func TheaterIndex(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Theater found", "data": t})
 }
 
+func ShowTheater(c *gin.Context){
+	id := c.Param("id")
+	var t model.Theater
+	if err := db.DB.First(&t, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Theater not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Theater found", "data": t})
+}
+
 func TheaterCreate(c *gin.Context) {
 	// bind to a generic map so we can accept numeric or string for `section`, and coerce row/col
 	var payload map[string]interface{}

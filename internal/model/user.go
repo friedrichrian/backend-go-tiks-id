@@ -22,10 +22,11 @@ type UserResponse struct {
 }
 
 type UserItem struct {
-	Fullname  string `json:"fullname"`
-	Email     string `json:"email"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
+	ID        uint     `json:"id"`
+	Fullname  string   `json:"fullname"`
+	Email     string   `json:"email"`
+	CreatedAt string   `json:"created_at"`
+	UpdatedAt string   `json:"updated_at"`
 }
 
 // GetAllUsers retrieves all users with formatted dates
@@ -40,6 +41,7 @@ func GetAllUsers(db *gorm.DB) (UserResponse, error) {
 	response.Message = "success"
 	for _, user := range users {
 		response.Data = append(response.Data, UserItem{
+			ID:        user.ID,
 			Fullname:  user.Fullname,
 			Email:     user.Email,
 			CreatedAt: user.CreatedAt.Format("2006-01-02"),
