@@ -69,6 +69,7 @@ func main() {
 		admin.Use(middleware.AdminRequired())
 		{
 			admin.GET("/transaction", handler.GetTransactionIndex)
+			admin.GET("/transaction/chart", handler.GetChartData)
 			admin.GET("/users", handler.UserIndex)
 			admin.DELETE("/users/:id", handler.UserDelete)
 
